@@ -1,99 +1,85 @@
+import axios from "axios";
 import React, { useEffect, useState } from "react";
-//import "./CovidData.css";
+import ListTable from "./ListTable";
 
-function CovidData() {
-  const [country, setCountry] = useState("");
-  const [cases, setCases] = useState("");
-  const [recovered, setRecovered] = useState("");
-  const [deaths, setDeaths] = useState("");
-  const [todayCases, setTodayCases] = useState("");
-  const [deathCases, setDeathCases] = useState("");
-  const [recoveredCases, setRecoveredCases] = useState("");
-  const [userInput, setUserInput] = useState("");
+const CovidData = () => {
+  const [data, setData] = useState({});
+  const [countries, setCountries] = useState([]);
 
   useEffect(() => {
-    fetch("https://disease.sh/v3/covid-19/countries")
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setData(data);
-      });
+    (async () => {
+      await axios
+        .get("https://disease.sh/v3/covid-19/countries")
+        .then(function (response) {
+          setData(response.data);
+          console.log(response.data);
+
+          const countriesArr = response.data.map((country) => ({
+            name: country.country, //United Kingdom, Unites States Of America, India,
+            code: country.countryInfo.iso2, //UK, USA, IND
+            continent: country.continent,
+            deaths: country.deaths,
+            population: country.population,
+            tests: country.tests,
+            cases: country.cases,
+            casesPerOneMillion: country.casesPerOneMillion,
+            flag: country.countryInfo.flag,
+          }));
+
+          setCountries(countriesArr);
+        });
+    })();
   }, []);
 
-  const setData = ({
-    country,
-    cases,
-    deaths,
-    recovered,
-    todayCases,
-    todayDeaths,
-    todayRecovered,
-  }) => {
-    setCountry(country);
-    setCases(cases);
-    setRecovered(recovered);
-    setDeaths(deaths);
-    setTodayCases(todayCases);
-    setDeathCases(todayDeaths);
-    setRecoveredCases(todayRecovered);
-  };
-
-  const handleSearch = (e) => {
-    setUserInput(e.target.value);
-  };
-  const handleSubmit = (props) => {
-    props.preventDefault();
-    fetch(`https://disease.sh/v3/covid-19/countries/${userInput}`)
-      .then((res) => res.json())
-      .then((data) => {
-        setData(data);
-      });
-  };
-
   return (
-    <div className="covidData">
-      <h1>COVID-19 CASES COUNTRY WISE</h1>
-      <div className="covidData__input">
-        <form onSubmit={handleSubmit}>
-          {/* input county name */}
-          <input onChange={handleSearch} placeholder="Enter Country Name" />
-          <br />
-          <button type="submit">Search</button>
-        </form>
+    <>
+      
+
+      <div className="overflow-x-auto relative">
+        <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+            <tr>
+              <th scope="col" className="py-3 px-6">
+                Country
+              </th>
+              <th scope="col" className="py-3 px-6">
+                Cases
+              </th>
+              <th scope="col" className="py-3 px-6">
+                Deaths
+              </th>
+              <th scope="col" className="py-3 px-6">
+                Population
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {countries &&
+              countries.map((country) => (
+                <tr className="bg-white border-b dark:bg-gray-800 dark:border-gray-700" key={country.name}>
+                  <td className="py-4 px-6 italic">
+                    <div className="flex">
+                      {" "}
+                      <img className="w-8 object-contain" src={country.flag} alt={country.name} />{" "}
+                      <span className="ml-4">{country.name}</span>
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    {country.cases.toLocaleString()}
+                  </td>
+                  <td className="py-4 px-6">
+                    {country.deaths.toLocaleString()}
+                  </td>
+                  <td className="py-4 px-6">
+                    {country.population.toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
       </div>
-
-      {/* Showing the details of the country */}
-      <div className="covidData__country__info">
-        <p>Country Name : {country} </p>
-
-        <p>Cases : {cases}</p>
-
-        <p>Deaths : {deaths}</p>
-
-        <p>Recovered : {recovered}</p>
-
-        <p>Cases Today : {todayCases}</p>
-
-        <p>Deaths Today : {deathCases}</p>
-
-        <p>Recovered Today : {recoveredCases}</p>
-      </div>
-
-      <table class="table-auto">
-        <thead>
-          <tr>
-            <th>country</th>
-            <th>cases</th>
-            <th>deaths</th>
-            <th>recovered</th>
-            <th>todayCases</th>
-            <th>todayDeaths</th>
-            <th>todayRecovered</th>
-          </tr>
-        </thead>
-      </table>
-    </div>
+    </>
   );
-}
+};
 
 export default CovidData;
